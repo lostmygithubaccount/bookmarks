@@ -1,0 +1,16 @@
+[workspace]
+
+[package]
+name = "bookmarks-py"
+version = "0.1.2"
+edition = "2024"
+authors = ["Cody <cody@dkdc.dev>"]
+license = "MIT"
+
+[lib]
+name = "_core"
+crate-type = ["cdylib"]
+
+[dependencies]
+dkdc-bookmarks = { path = "../bookmarks-cli", features = ["app", "webapp"] }
+pyo3 = { version = "0.28", features = ["extension-module", "abi3-py311"] }

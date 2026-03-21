@@ -1,0 +1,9 @@
+[workspace]
+resolver = "2"
+members = ["crates/bookmarks-cli"]
+exclude = ["crates/bookmarks-py"]
+
+[profile.release]
+lto = true
+strip = true
+codegen-units = 1

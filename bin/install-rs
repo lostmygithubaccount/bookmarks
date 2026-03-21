@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "${BASH_SOURCE[0]}")/.."
+
+echo "Installing bookmarks CLI..."
+cargo install --path crates/bookmarks-cli --features app,webapp --force
+
+echo "Rust install complete!"

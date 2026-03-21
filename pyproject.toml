@@ -1,0 +1,33 @@
+[project]
+name = "dkdc-bookmarks"
+version = "0.1.2"
+description = "Bookmarks in your filesystem"
+authors = [{ name = "Cody", email = "cody@dkdc.dev" }]
+requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE"]
+readme = "README.md"
+dependencies = []
+
+[project.scripts]
+bookmarks = "bookmarks:main"
+
+[dependency-groups]
+dev = ["maturin>=1.0,<2.0", "ruff>=0.9", "ty>=0.0.19", "pytest>=8"]
+
+[tool.maturin]
+module-name = "bookmarks.core"
+python-packages = ["bookmarks"]
+python-source = "py"
+manifest-path = "crates/bookmarks-py/Cargo.toml"
+
+[build-system]
+requires = ["maturin>=1.0,<2.0"]
+build-backend = "maturin"
+
+[tool.uv]
+cache-keys = [
+    { file = "pyproject.toml" },
+    { file = "crates/bookmarks-cli/**/*.rs" },
+    { file = "crates/bookmarks-py/**/*.rs" },
+]
