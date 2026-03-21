@@ -133,7 +133,7 @@ fn page(body: &str) -> String {
 </head>
 <body>
   <h1>Bookmarks</h1>
-  <p class="subtitle"><a href="{project_url}" target="_blank" rel="noopener">bookmarks</a> in your <s>filesystem</s> browser</p>
+  <p class="subtitle"><a href="{project_url}" target="_blank" rel="noopener">bookmarks</a> in your filesystem</p>
   <div id="content">
     {body}
   </div>

@@ -559,14 +559,9 @@ impl Links {
                         .size(13)
                         .color(colors::PURPLE)
                         .link(strings::PROJECT_URL.to_string()),
-                    iced::widget::span(" in your ")
+                    iced::widget::span(" in your filesystem")
                         .size(13)
                         .color(colors::TEXT_DIM),
-                    iced::widget::span("filesystem")
-                        .size(13)
-                        .color(colors::TEXT_DIM)
-                        .strikethrough(true),
-                    iced::widget::span(" app").size(13).color(colors::TEXT_DIM),
                 ])
                 .on_link_click(Message::OpenUrl),
             ]
