@@ -21,18 +21,27 @@ bin/bump-version   # Bump version (--patch, --minor (default), --major)
 ## Architecture
 
 ```
-crates/bookmarks-cli/     # Core Rust crate (dkdc-bookmarks on crates.io, bookmarks binary)
-  src/lib.rs              # Library root
-  src/main.rs             # Binary entry point
-  src/cli.rs              # CLI (clap) with -f, --app, --webapp flags
-  src/config.rs           # Config loading/saving
-  src/open.rs             # Link resolution (alias → link → URI)
-  src/app.rs              # iced desktop app (behind `app` feature flag)
-  src/webapp.rs           # Axum HTMX webapp on port 1414 (behind `webapp` feature flag)
+crates/bookmarks-core/    # Core library (config, storage, open, strings)
+  src/lib.rs              # Library root — re-exports Config, Storage, TomlStorage
+  src/config.rs           # Config struct, validation, parsing, editing
+  src/storage.rs          # Storage trait (backend-agnostic)
+  src/toml_storage.rs     # TOML file storage implementation
+  src/open.rs             # Link resolution (alias → link → URI) and opening
+  src/strings.rs          # Shared string constants and error templates
+crates/bookmarks-app/     # iced desktop app
+  src/lib.rs              # Desktop UI (depends on bookmarks-core)
   assets/icon.png         # App window icon
+crates/bookmarks-webapp/  # Axum HTMX webapp (port 1414)
+  src/lib.rs              # Web UI (depends on bookmarks-core)
+crates/bookmarks-cli/     # CLI binary (dkdc-bookmarks on crates.io)
+  src/main.rs             # Binary entry point
+  src/lib.rs              # Re-exports core + run_cli
+  src/cli.rs              # CLI (clap) with -f, --app, --webapp flags
 crates/bookmarks-py/      # PyO3 bindings (cdylib)
 py/bookmarks/             # Python wrapper + type stubs (core.pyi, py.typed)
 ```
+
+Feature flags on `bookmarks-cli`: `app` (pulls in bookmarks-app), `webapp` (pulls in bookmarks-webapp).
 
 Config resolution: `-f` flag > `./bookmarks.toml` (cwd) > `~/.config/bookmarks/bookmarks.toml` (global).
 

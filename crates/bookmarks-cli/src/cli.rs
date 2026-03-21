@@ -2,10 +2,10 @@ use anyhow::Result;
 use clap::Parser;
 use std::path::PathBuf;
 
-use crate::config::{edit_config, print_config};
-use crate::open::open_links;
-use crate::storage::Storage;
-use crate::toml_storage::TomlStorage;
+use bookmarks_core::config::{edit_config, print_config};
+use bookmarks_core::open::open_links;
+use bookmarks_core::storage::Storage;
+use bookmarks_core::toml_storage::TomlStorage;
 
 #[derive(Parser, Debug)]
 #[command(name = "bookmarks")]
@@ -65,7 +65,7 @@ fn resolve_storage(bookmarks_file: Option<PathBuf>, global: bool) -> Result<Toml
     Ok(storage)
 }
 
-pub fn run<I, T>(args: I) -> Result<()>
+pub fn run_cli<I, T>(args: I) -> Result<()>
 where
     I: IntoIterator<Item = T>,
     T: Into<std::ffi::OsString> + Clone,
@@ -76,12 +76,12 @@ where
 
     #[cfg(feature = "app")]
     if args.app {
-        return crate::app::run(Box::new(storage)).map_err(|e| anyhow::anyhow!("{e}"));
+        return bookmarks_app::run(Box::new(storage)).map_err(|e| anyhow::anyhow!("{e}"));
     }
 
     #[cfg(feature = "webapp")]
     if args.webapp {
-        return crate::webapp::run(Box::new(storage));
+        return bookmarks_webapp::run(Box::new(storage));
     }
 
     if args.config {

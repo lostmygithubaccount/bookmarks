@@ -7,9 +7,9 @@ use iced::widget::{
 use iced::{Element, Length, Size, Theme};
 use std::collections::HashSet;
 
-use crate::config::Config;
-use crate::storage::Storage;
-use crate::strings;
+use bookmarks_core::config::Config;
+use bookmarks_core::storage::Storage;
+use bookmarks_core::strings;
 
 // -- Colors ------------------------------------------------------------------
 

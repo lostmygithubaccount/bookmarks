@@ -1,6 +1,6 @@
 [package]
 name = "dkdc-bookmarks"
-version = "0.1.4"
+version = "0.2.0"
 edition = "2024"
 authors = ["Cody <cody@dkdc.dev>"]
 description = "Bookmarks in your filesystem"
@@ -18,20 +18,12 @@ name = "bookmarks"
 path = "src/main.rs"
 
 [features]
-app = ["dep:iced", "dep:png"]
-webapp = ["dep:axum", "dep:tokio"]
+app = ["dep:dkdc-bookmarks-app"]
+webapp = ["dep:dkdc-bookmarks-webapp"]
 
 [dependencies]
 anyhow = "1"
-axum = { version = "0.8", optional = true }
+dkdc-bookmarks-core = { version = "0.2.0", path = "../bookmarks-core" }
+dkdc-bookmarks-app = { version = "0.2.0", path = "../bookmarks-app", optional = true }
+dkdc-bookmarks-webapp = { version = "0.2.0", path = "../bookmarks-webapp", optional = true }
 clap = { version = "4.5", features = ["derive"] }
-dirs = "6"
-iced = { version = "0.14", features = ["tokio", "svg"], optional = true }
-open = "5"
-png = { version = "0.17", optional = true }
-serde = { version = "1", features = ["derive"] }
-tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "signal"], optional = true }
-toml = "0.9"
-
-[dev-dependencies]
-tempfile = "3"

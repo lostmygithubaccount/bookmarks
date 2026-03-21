@@ -3,6 +3,6 @@ set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
 echo "Building bookmarks..."
-cargo build --manifest-path crates/bookmarks-cli/Cargo.toml --features app,webapp "$@"
+cargo build --features app,webapp "$@"
 
 echo "Rust build complete!"

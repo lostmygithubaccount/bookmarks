@@ -3,7 +3,7 @@ use pyo3::prelude::*;
 
 #[pyfunction]
 fn run(argv: Vec<String>) -> PyResult<()> {
-    bookmarks::run(argv.iter().map(|s| s.as_str()))
+    bookmarks::run_cli(argv.iter().map(|s| s.as_str()))
         .map_err(|e| PyErr::new::<PyRuntimeError, _>(e.to_string()))
 }
 

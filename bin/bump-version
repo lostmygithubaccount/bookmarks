@@ -40,6 +40,9 @@ BUMP="${BUMP:-minor}"
 
 TOML_FILES=(
   pyproject.toml
+  crates/bookmarks-core/Cargo.toml
+  crates/bookmarks-app/Cargo.toml
+  crates/bookmarks-webapp/Cargo.toml
   crates/bookmarks-cli/Cargo.toml
   crates/bookmarks-py/Cargo.toml
 )
@@ -77,6 +80,17 @@ echo "Bumping version: $CURRENT -> $NEW ($BUMP)"
 for f in "${TOML_FILES[@]}"; do
   sed -i '' "s/^version = \"$CURRENT\"/version = \"$NEW\"/" "$f"
   echo "  updated $f"
+done
+
+# update inter-crate dependency versions
+for f in crates/bookmarks-app/Cargo.toml crates/bookmarks-webapp/Cargo.toml crates/bookmarks-cli/Cargo.toml; do
+  sed -i '' "s/dkdc-bookmarks-core = { version = \"$CURRENT\"/dkdc-bookmarks-core = { version = \"$NEW\"/" "$f"
+  echo "  updated dep version in $f"
+done
+for f in crates/bookmarks-cli/Cargo.toml; do
+  sed -i '' "s/dkdc-bookmarks-app = { version = \"$CURRENT\"/dkdc-bookmarks-app = { version = \"$NEW\"/" "$f"
+  sed -i '' "s/dkdc-bookmarks-webapp = { version = \"$CURRENT\"/dkdc-bookmarks-webapp = { version = \"$NEW\"/" "$f"
+  echo "  updated dep versions in $f"
 done
 
 # ---------- regenerate lock files ----------

@@ -1,0 +1,21 @@
+[package]
+name = "dkdc-bookmarks-webapp"
+version = "0.2.0"
+edition = "2024"
+authors = ["Cody <cody@dkdc.dev>"]
+description = "HTMX webapp for bookmarks (axum)"
+repository = "https://github.com/lostmygithubaccount/bookmarks"
+license = "MIT"
+readme = "README.md"
+
+[lib]
+name = "bookmarks_webapp"
+path = "src/lib.rs"
+
+[dependencies]
+anyhow = "1"
+dkdc-bookmarks-core = { version = "0.2.0", path = "../bookmarks-core" }
+axum = "0.8"
+open = "5"
+serde = { version = "1", features = ["derive"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "signal"] }

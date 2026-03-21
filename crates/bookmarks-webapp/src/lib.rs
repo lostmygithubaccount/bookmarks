@@ -7,9 +7,9 @@ use axum::routing::{get, post};
 use std::net::SocketAddr;
 use std::sync::{Arc, Mutex};
 
-use crate::config::Config;
-use crate::storage::Storage;
-use crate::strings;
+use bookmarks_core::config::Config;
+use bookmarks_core::storage::Storage;
+use bookmarks_core::strings;
 
 struct AppState {
     storage: Mutex<Box<dyn Storage>>,

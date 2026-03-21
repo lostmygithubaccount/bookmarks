@@ -1,3 +1,3 @@
 fn main() -> anyhow::Result<()> {
-    bookmarks::run(std::env::args())
+    bookmarks::run_cli(std::env::args())
 }
