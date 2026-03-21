@@ -13,8 +13,12 @@ permissions:
   contents: read
 
 jobs:
+  check:
+    uses: ./.github/workflows/check.yml
+
   publish:
     name: Publish to crates.io
+    needs: check
     runs-on: ubuntu-latest
     environment: crates-io
     permissions:
