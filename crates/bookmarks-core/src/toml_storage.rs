@@ -102,7 +102,7 @@ mod tests {
             f,
             r#"[urls]
 github = {{ url = "https://github.com", aliases = ["gh"] }}
-rust = "https://rust-lang.org"
+dkdc-bookmarks = "https://github.com/lostmygithubaccount/bookmarks"
 
 [groups]
 dev = ["gh"]
@@ -113,8 +113,8 @@ dev = ["gh"]
         let config = storage.load().unwrap();
         assert_eq!(config.urls.get("github").unwrap().aliases(), &["gh"]);
         assert_eq!(
-            config.urls.get("rust").unwrap().url(),
-            "https://rust-lang.org"
+            config.urls.get("dkdc-bookmarks").unwrap().url(),
+            "https://github.com/lostmygithubaccount/bookmarks"
         );
 
         // Save and reload
@@ -142,15 +142,15 @@ dev = ["gh"]
         let dir = tempfile::tempdir().unwrap();
         let path = dir.path().join("bookmarks.toml");
 
-        fs::write(&path, "[urls]\nrust = \"https://rust-lang.org\"\n").unwrap();
+        fs::write(&path, "[urls]\ndkdc-bookmarks = \"https://github.com/lostmygithubaccount/bookmarks\"\n").unwrap();
 
         let storage = TomlStorage::new(path);
         storage.init().unwrap();
 
         let config = storage.load().unwrap();
         assert_eq!(
-            config.urls.get("rust").unwrap().url(),
-            "https://rust-lang.org"
+            config.urls.get("dkdc-bookmarks").unwrap().url(),
+            "https://github.com/lostmygithubaccount/bookmarks"
         );
     }
 

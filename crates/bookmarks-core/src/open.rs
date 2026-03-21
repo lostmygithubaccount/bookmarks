@@ -80,14 +80,14 @@ mod tests {
             },
         );
         urls.insert(
-            "rust".to_string(),
-            UrlEntry::Simple("https://rust-lang.org".to_string()),
+            "dkdc-bookmarks".to_string(),
+            UrlEntry::Simple("https://github.com/lostmygithubaccount/bookmarks".to_string()),
         );
 
         let mut groups = HashMap::new();
         groups.insert(
             "dev".to_string(),
-            vec!["gh".to_string(), "rust".to_string()],
+            vec!["gh".to_string(), "dkdc-bookmarks".to_string()],
         );
 
         Config { urls, groups }
@@ -103,8 +103,8 @@ mod tests {
     #[test]
     fn test_url_name_resolves_to_uri() {
         let config = test_config();
-        let uri = resolve_uri("rust", &config).unwrap();
-        assert_eq!(uri, "https://rust-lang.org");
+        let uri = resolve_uri("dkdc-bookmarks", &config).unwrap();
+        assert_eq!(uri, "https://github.com/lostmygithubaccount/bookmarks");
     }
 
     #[test]
@@ -127,7 +127,7 @@ mod tests {
         let config = test_config();
         let names = vec!["dev".to_string()];
         let expanded = expand_groups(&names, &config);
-        assert_eq!(expanded, vec!["gh", "rust"]);
+        assert_eq!(expanded, vec!["gh", "dkdc-bookmarks"]);
     }
 
     #[test]
@@ -135,7 +135,7 @@ mod tests {
         let config = test_config();
         let names = vec!["dev".to_string(), "google".to_string()];
         let expanded = expand_groups(&names, &config);
-        assert_eq!(expanded, vec!["gh", "rust", "google"]);
+        assert_eq!(expanded, vec!["gh", "dkdc-bookmarks", "google"]);
     }
 
     #[test]
@@ -144,6 +144,6 @@ mod tests {
         // "gh" appears in group "dev" and also directly
         let names = vec!["dev".to_string(), "gh".to_string()];
         let expanded = expand_groups(&names, &config);
-        assert_eq!(expanded, vec!["gh", "rust"]);
+        assert_eq!(expanded, vec!["gh", "dkdc-bookmarks"]);
     }
 }

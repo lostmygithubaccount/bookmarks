@@ -10,7 +10,7 @@ const DEFAULT_EDITOR: &str = "vi";
 /// In TOML this means all three forms work:
 /// ```toml
 /// [urls]
-/// rust = "https://rust-lang.org"
+/// dkdc-bookmarks = "https://github.com/lostmygithubaccount/bookmarks"
 /// github = { url = "https://github.com", aliases = ["gh"] }
 ///
 /// [urls.linkedin]
@@ -89,7 +89,7 @@ pub const DEFAULT_CONFIG: &str = r#"# https://github.com/lostmygithubaccount/boo
 # bookmarks config file
 
 [urls]
-rust = "https://rust-lang.org"
+dkdc-bookmarks = "https://github.com/lostmygithubaccount/bookmarks"
 github = { url = "https://github.com", aliases = ["gh"] }
 
 [urls.linkedin]
@@ -97,7 +97,7 @@ url = "https://linkedin.com"
 aliases = ["li"]
 
 [groups]
-socials = ["gh", "li"]
+socials = ["gh", "linkedin"]
 "#;
 
 impl Config {
@@ -375,11 +375,14 @@ dev = ["gh"]
     fn test_parse_simple_url() {
         let toml = r#"
 [urls]
-rust = "https://rust-lang.org"
+dkdc-bookmarks = "https://github.com/lostmygithubaccount/bookmarks"
 "#;
         let config: Config = toml::from_str(toml).unwrap();
-        let entry = config.urls.get("rust").unwrap();
-        assert_eq!(entry.url(), "https://rust-lang.org");
+        let entry = config.urls.get("dkdc-bookmarks").unwrap();
+        assert_eq!(
+            entry.url(),
+            "https://github.com/lostmygithubaccount/bookmarks"
+        );
         assert!(entry.aliases().is_empty());
     }
 
@@ -400,7 +403,7 @@ aliases = ["li", "ln"]
     fn test_parse_hybrid_config() {
         let toml = r#"
 [urls]
-rust = "https://rust-lang.org"
+dkdc-bookmarks = "https://github.com/lostmygithubaccount/bookmarks"
 github = { url = "https://github.com", aliases = ["gh"] }
 
 [urls.linkedin]
@@ -408,13 +411,13 @@ url = "https://linkedin.com"
 aliases = ["li"]
 
 [groups]
-socials = ["gh", "li"]
+socials = ["gh", "linkedin"]
 "#;
         let config: Config = toml::from_str(toml).unwrap();
         assert_eq!(config.urls.len(), 3);
         assert_eq!(
-            config.urls.get("rust").unwrap().url(),
-            "https://rust-lang.org"
+            config.urls.get("dkdc-bookmarks").unwrap().url(),
+            "https://github.com/lostmygithubaccount/bookmarks"
         );
         assert_eq!(config.urls.get("github").unwrap().aliases(), &["gh"]);
         assert_eq!(config.urls.get("linkedin").unwrap().aliases(), &["li"]);
@@ -465,7 +468,10 @@ socials = ["gh", "li"]
     #[test]
     fn test_resolve_by_url_name() {
         let config: Config = toml::from_str(DEFAULT_CONFIG).unwrap();
-        assert_eq!(config.resolve("rust"), Some("https://rust-lang.org"));
+        assert_eq!(
+            config.resolve("dkdc-bookmarks"),
+            Some("https://github.com/lostmygithubaccount/bookmarks")
+        );
     }
 
     #[test]
@@ -497,8 +503,8 @@ b = { url = "https://b.com", aliases = ["x"] }
     fn test_alias_shadows_url_name_warns() {
         let toml = r#"
 [urls]
-github = { url = "https://github.com", aliases = ["rust"] }
-rust = "https://rust-lang.org"
+github = { url = "https://github.com", aliases = ["dkdc-bookmarks"] }
+dkdc-bookmarks = "https://github.com/lostmygithubaccount/bookmarks"
 "#;
         let config: Config = toml::from_str(toml).unwrap();
         let warnings = config.validate();
@@ -655,7 +661,7 @@ a = "https://a.com"
         let toml = r#"
 [urls]
 github = { url = "https://github.com", aliases = ["gh", "g"] }
-rust = "https://rust-lang.org"
+dkdc-bookmarks = "https://github.com/lostmygithubaccount/bookmarks"
 
 [groups]
 dev = ["gh", "github"]
@@ -663,7 +669,7 @@ dev = ["gh", "github"]
         let mut config: Config = toml::from_str(toml).unwrap();
         config.delete_url("github").unwrap();
         assert!(!config.urls.contains_key("github"));
-        assert!(config.urls.contains_key("rust"));
+        assert!(config.urls.contains_key("dkdc-bookmarks"));
         // Group entries for both the url name and its aliases are removed
         assert!(!config.groups.contains_key("dev"));
     }
@@ -673,15 +679,15 @@ dev = ["gh", "github"]
         let toml = r#"
 [urls]
 github = { url = "https://github.com", aliases = ["gh"] }
-rust = "https://rust-lang.org"
+dkdc-bookmarks = "https://github.com/lostmygithubaccount/bookmarks"
 
 [groups]
-dev = ["gh", "rust"]
+dev = ["gh", "dkdc-bookmarks"]
 "#;
         let mut config: Config = toml::from_str(toml).unwrap();
         config.delete_url("github").unwrap();
         let dev = config.groups.get("dev").unwrap();
-        assert_eq!(dev, &vec!["rust".to_string()]);
+        assert_eq!(dev, &vec!["dkdc-bookmarks".to_string()]);
     }
 
     #[test]
@@ -731,14 +737,14 @@ b = ["y"]
     fn test_rename_group_cascades() {
         let toml = r#"
 [groups]
-dev = ["gh", "rust"]
+dev = ["gh", "dkdc-bookmarks"]
 "#;
         let mut config: Config = toml::from_str(toml).unwrap();
         config.rename_group("dev", "development").unwrap();
         assert!(!config.groups.contains_key("dev"));
         assert_eq!(
             config.groups.get("development"),
-            Some(&vec!["gh".to_string(), "rust".to_string()])
+            Some(&vec!["gh".to_string(), "dkdc-bookmarks".to_string()])
         );
     }
 

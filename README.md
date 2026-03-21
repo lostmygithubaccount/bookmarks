@@ -2,6 +2,7 @@
 
 Bookmarks in your filesystem.
 
+[![GitHub Release](https://img.shields.io/github/v/release/lostmygithubaccount/bookmarks?color=blue)](https://github.com/lostmygithubaccount/bookmarks/releases)
 [![PyPI](https://img.shields.io/pypi/v/dkdc-bookmarks?color=blue)](https://pypi.org/project/dkdc-bookmarks/)
 [![crates.io](https://img.shields.io/crates/v/dkdc-bookmarks?color=blue)](https://crates.io/crates/dkdc-bookmarks)
 [![CI](https://img.shields.io/github/actions/workflow/status/lostmygithubaccount/bookmarks/ci.yml?branch=main&label=CI)](https://github.com/lostmygithubaccount/bookmarks/actions/workflows/ci.yml)
@@ -46,7 +47,7 @@ Example:
 
 ```toml
 [urls]
-rust = "https://rust-lang.org"
+dkdc-bookmarks = "https://github.com/lostmygithubaccount/bookmarks"
 github = { url = "https://github.com", aliases = ["gh"] }
 
 [urls.linkedin]
@@ -54,7 +55,7 @@ url = "https://linkedin.com"
 aliases = ["li"]
 
 [groups]
-socials = ["gh", "li"]
+socials = ["gh", "linkedin"]
 ```
 
 URLs can be plain strings, inline tables with aliases, or expanded tables. Groups reference url names or aliases.
