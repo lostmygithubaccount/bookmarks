@@ -1,5 +1,11 @@
 target/
 *.pyc
 __pycache__/
+*.so
+*.dylib
+*.dSYM/
+*.egg-info/
 .venv/
+.ruff_cache/
 .sync-repo/
+.DS_Store
