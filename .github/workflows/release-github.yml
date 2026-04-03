@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   check:
-    uses: ./.github/workflows/check.yml
+    uses: dkdc-io/.github/.github/workflows/check.yml@v1
 
   build:
     name: Build (${{ matrix.target }})
@@ -38,7 +38,7 @@ jobs:
           ref: ${{ github.event.inputs.tag || github.ref }}
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.13"
+          python-version: "3.14"
       - uses: actions/cache@v4
         with:
           path: |
