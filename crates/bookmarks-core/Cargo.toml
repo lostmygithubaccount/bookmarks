@@ -2,7 +2,7 @@
 name = "dkdc-bookmarks-core"
 version = "0.4.0"
 edition = "2024"
-authors = ["Cody <cody@dkdc.dev>"]
+authors = ["Cody <cody@dkdc.io>"]
 description = "Core library for bookmarks"
 repository = "https://github.com/dkdc-io/bookmarks"
 license = "MIT"
