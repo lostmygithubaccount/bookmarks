@@ -2,7 +2,7 @@
 name = "dkdc-bookmarks"
 version = "0.4.0"
 edition = "2024"
-authors = ["Cody <cody@dkdc.dev>"]
+authors = ["Cody <cody@dkdc.io>"]
 description = "Bookmarks in your filesystem"
 repository = "https://github.com/dkdc-io/bookmarks"
 homepage = "https://github.com/dkdc-io/bookmarks"
