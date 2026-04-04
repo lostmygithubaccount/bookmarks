@@ -8,4 +8,5 @@ __pycache__/
 .venv/
 .ruff_cache/
 .sync-repo/
+.pytest_cache/
 .DS_Store
