@@ -26,8 +26,16 @@ impl AppState {
         self.lock_storage().load().unwrap_or_default()
     }
 
-    fn save_config(&self, config: &Config) -> Result<(), String> {
-        self.lock_storage().save(config).map_err(|e| e.to_string())
+    /// Hold the lock across the entire load-modify-save cycle to prevent
+    /// TOCTOU races between concurrent requests.
+    fn modify_config<F>(&self, f: F) -> Result<(), String>
+    where
+        F: FnOnce(&mut Config) -> Result<(), String>,
+    {
+        let storage = self.lock_storage();
+        let mut config = storage.load().unwrap_or_default();
+        f(&mut config)?;
+        storage.save(&config).map_err(|e| e.to_string())
     }
 }
 
@@ -614,10 +622,13 @@ fn content_err(state: &Arc<AppState>, msg: &str) -> Html<String> {
     ))
 }
 
-fn save_or_err(state: &Arc<AppState>, config: &Config) -> Html<String> {
-    match state.save_config(config) {
+fn modify_or_err(
+    state: &Arc<AppState>,
+    f: impl FnOnce(&mut Config) -> Result<(), String>,
+) -> Html<String> {
+    match state.modify_config(f) {
         Ok(()) => content_ok(state),
-        Err(e) => content_err(state, &format!("failed to save: {e}")),
+        Err(e) => content_err(state, &e),
     }
 }
 
@@ -625,9 +636,10 @@ async fn add_url(State(state): S, axum::extract::Form(form): Form) -> Html<Strin
     let name = form.get("name").cloned().unwrap_or_default();
     let url = form.get("url").cloned().unwrap_or_default();
     if !name.is_empty() && !url.is_empty() {
-        let mut config = state.load_config();
-        config.urls.insert(name, UrlEntry::Simple(url));
-        return save_or_err(&state, &config);
+        return modify_or_err(&state, |config| {
+            config.urls.insert(name, UrlEntry::Simple(url));
+            Ok(())
+        });
     }
     content_ok(&state)
 }
@@ -642,37 +654,33 @@ async fn add_group(State(state): S, axum::extract::Form(form): Form) -> Html<Str
             .filter(|s| !s.is_empty())
             .collect();
         if !entries.is_empty() {
-            let config = state.load_config();
-            let missing: Vec<&str> = entries
-                .iter()
-                .filter(|e| !config.contains(e))
-                .map(String::as_str)
-                .collect();
-            if !missing.is_empty() {
-                return content_err(&state, &strings::err_group_entries_missing(&missing));
-            }
-            let mut config = config;
-            config.groups.insert(name, entries);
-            return save_or_err(&state, &config);
+            return modify_or_err(&state, |config| {
+                let missing: Vec<&str> = entries
+                    .iter()
+                    .filter(|e| !config.contains(e))
+                    .map(String::as_str)
+                    .collect();
+                if !missing.is_empty() {
+                    return Err(strings::err_group_entries_missing(&missing));
+                }
+                config.groups.insert(name, entries);
+                Ok(())
+            });
         }
     }
     content_ok(&state)
 }
 
 async fn delete_url(State(state): S, Path(name): Path<String>) -> Html<String> {
-    let mut config = state.load_config();
-    if let Err(e) = config.delete_url(&name) {
-        return content_err(&state, &e.to_string());
-    }
-    save_or_err(&state, &config)
+    modify_or_err(&state, |config| {
+        config.delete_url(&name).map_err(|e| e.to_string())
+    })
 }
 
 async fn delete_group(State(state): S, Path(name): Path<String>) -> Html<String> {
-    let mut config = state.load_config();
-    if let Err(e) = config.delete_group(&name) {
-        return content_err(&state, &e.to_string());
-    }
-    save_or_err(&state, &config)
+    modify_or_err(&state, |config| {
+        config.delete_group(&name).map_err(|e| e.to_string())
+    })
 }
 
 // -- Edit handlers -----------------------------------------------------------
@@ -682,55 +690,57 @@ async fn edit_url(
     Path(name): Path<String>,
     axum::extract::Form(form): Form,
 ) -> Html<String> {
-    let mut config = state.load_config();
-    let new_name = form.get("new_name").filter(|s| !s.is_empty());
-    let new_url = form.get("new_url").filter(|s| !s.is_empty());
+    let new_name = form.get("new_name").filter(|s| !s.is_empty()).cloned();
+    let new_url = form.get("new_url").filter(|s| !s.is_empty()).cloned();
+    let new_aliases = form.get("new_aliases").cloned();
 
-    // Rename first (can fail), then update value on the (possibly new) key
-    let key = if let Some(new_name) = new_name
-        && new_name != &name
-    {
-        if let Err(e) = config.rename_url(&name, new_name) {
-            return content_err(&state, &e.to_string());
+    modify_or_err(&state, |config| {
+        // Rename first (can fail), then update value on the (possibly new) key
+        let key = if let Some(ref new_name) = new_name
+            && new_name != &name
+        {
+            config
+                .rename_url(&name, new_name)
+                .map_err(|e| e.to_string())?;
+            new_name.clone()
+        } else {
+            name
+        };
+
+        if let Some(ref new_url) = new_url
+            && let Some(entry) = config.urls.get_mut(&key)
+        {
+            entry.set_url(new_url.clone());
         }
-        new_name.clone()
-    } else {
-        name
-    };
 
-    if let Some(new_url) = new_url
-        && let Some(entry) = config.urls.get_mut(&key)
-    {
-        entry.set_url(new_url.clone());
-    }
-
-    // Update aliases if provided
-    if let Some(new_aliases) = form.get("new_aliases") {
-        let aliases: Vec<String> = new_aliases
-            .split(',')
-            .map(|s| s.trim().to_string())
-            .filter(|s| !s.is_empty())
-            .collect();
-        if let Some(entry) = config.urls.get_mut(&key) {
-            match entry {
-                UrlEntry::Simple(url) => {
-                    if !aliases.is_empty() {
-                        *entry = UrlEntry::Full {
-                            url: url.clone(),
-                            aliases,
-                        };
+        // Update aliases if provided
+        if let Some(ref new_aliases) = new_aliases {
+            let aliases: Vec<String> = new_aliases
+                .split(',')
+                .map(|s| s.trim().to_string())
+                .filter(|s| !s.is_empty())
+                .collect();
+            if let Some(entry) = config.urls.get_mut(&key) {
+                match entry {
+                    UrlEntry::Simple(url) => {
+                        if !aliases.is_empty() {
+                            *entry = UrlEntry::Full {
+                                url: url.clone(),
+                                aliases,
+                            };
+                        }
                     }
-                }
-                UrlEntry::Full {
-                    aliases: existing, ..
-                } => {
-                    *existing = aliases;
+                    UrlEntry::Full {
+                        aliases: existing, ..
+                    } => {
+                        *existing = aliases;
+                    }
                 }
             }
         }
-    }
 
-    save_or_err(&state, &config)
+        Ok(())
+    })
 }
 
 async fn edit_group(
@@ -738,49 +748,50 @@ async fn edit_group(
     Path(name): Path<String>,
     axum::extract::Form(form): Form,
 ) -> Html<String> {
-    let mut config = state.load_config();
-    let new_name = form.get("new_name").filter(|s| !s.is_empty());
-    let new_entries = form.get("new_entries").filter(|s| !s.is_empty());
+    let new_name = form.get("new_name").filter(|s| !s.is_empty()).cloned();
+    let new_entries = form.get("new_entries").filter(|s| !s.is_empty()).cloned();
 
-    // Parse and validate entries before any mutation
-    let parsed_entries = if let Some(new_entries) = new_entries {
-        let entries: Vec<String> = new_entries
-            .split(',')
-            .map(|s| s.trim().to_string())
-            .filter(|s| !s.is_empty())
-            .collect();
-        let missing: Vec<&str> = entries
-            .iter()
-            .filter(|e| !config.contains(e))
-            .map(String::as_str)
-            .collect();
-        if !missing.is_empty() {
-            return content_err(&state, &strings::err_group_entries_missing(&missing));
+    modify_or_err(&state, |config| {
+        // Parse and validate entries before any mutation
+        let parsed_entries = if let Some(ref new_entries) = new_entries {
+            let entries: Vec<String> = new_entries
+                .split(',')
+                .map(|s| s.trim().to_string())
+                .filter(|s| !s.is_empty())
+                .collect();
+            let missing: Vec<&str> = entries
+                .iter()
+                .filter(|e| !config.contains(e))
+                .map(String::as_str)
+                .collect();
+            if !missing.is_empty() {
+                return Err(strings::err_group_entries_missing(&missing));
+            }
+            Some(entries)
+        } else {
+            None
+        };
+
+        // Rename first, then update entries on the (possibly new) key
+        let key = if let Some(ref new_name) = new_name
+            && new_name != &name
+        {
+            config
+                .rename_group(&name, new_name)
+                .map_err(|e| e.to_string())?;
+            new_name.clone()
+        } else {
+            name
+        };
+
+        if let Some(entries) = parsed_entries
+            && let Some(existing) = config.groups.get_mut(&key)
+        {
+            *existing = entries;
         }
-        Some(entries)
-    } else {
-        None
-    };
 
-    // Rename first, then update entries on the (possibly new) key
-    let key = if let Some(new_name) = new_name
-        && new_name != &name
-    {
-        if let Err(e) = config.rename_group(&name, new_name) {
-            return content_err(&state, &e.to_string());
-        }
-        new_name.clone()
-    } else {
-        name
-    };
-
-    if let Some(entries) = parsed_entries
-        && let Some(existing) = config.groups.get_mut(&key)
-    {
-        *existing = entries;
-    }
-
-    save_or_err(&state, &config)
+        Ok(())
+    })
 }
 
 // -- Server ------------------------------------------------------------------

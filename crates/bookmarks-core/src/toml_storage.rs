@@ -53,7 +53,9 @@ impl Storage for TomlStorage {
 
     fn save(&self, config: &Config) -> Result<()> {
         let contents = toml::to_string(config).context("Failed to serialize config")?;
-        fs::write(&self.path, contents).context("Failed to write config file")?;
+        let temp = self.path.with_extension("toml.tmp");
+        fs::write(&temp, contents).context("Failed to write temp config file")?;
+        fs::rename(&temp, &self.path).context("Failed to rename temp config file")?;
         Ok(())
     }
 
